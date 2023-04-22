@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:wallpaper/providers/getphotos.dart';
+import 'package:wallpaper/screens/favorites.dart';
+import 'package:wallpaper/screens/search.dart';
+
+import '../myphotos.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -12,6 +17,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  void initState() {
+    super.initState();
+    Provider.of<PhotodProvider>(context, listen: false).openDb();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -19,7 +29,10 @@ class _HomeState extends State<Home> {
             drawer: Drawer(
               backgroundColor: Colors.black,
               child: ListTile(
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => FavoritesPage()));
+                },
                 title: Text(
                   'feavorits ',
                   style: TextStyle(
@@ -32,7 +45,10 @@ class _HomeState extends State<Home> {
             appBar: AppBar(
               actions: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => SearchPage()));
+                  },
                   icon: Icon(Icons.search),
                   color: Colors.white,
                   iconSize: 30,
@@ -68,7 +84,59 @@ class _HomeState extends State<Home> {
                         itemBuilder: (BuildContext context, index) {
                           final photo = provider.photos[index];
                           return InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Container(
+                                    height: 400.0,
+                                    child: Column(
+                                      children: [
+                                        SizedBox(
+                                          height: 20,
+                                        ),
+                                        Container(
+                                          child: Image(
+                                            image: NetworkImage(
+                                              photo['src']['medium'],
+                                            ),
+                                          ),
+                                          width: 178,
+                                          height: 240,
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Text(
+                                            'Tacken by ${photo['photographer']}',
+                                            style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        IconButton(
+                                            onPressed: () {
+                                              var myPhoto = MyPhotos(
+                                                  id: photo['id'],
+                                                  src: photo['src']['medium'],
+                                                  photographer:
+                                                      photo['photographer']);
+                                              Provider.of<PhotodProvider>(
+                                                      context,
+                                                      listen: false)
+                                                  .insertPhoto(myPhoto);
+                                            },
+                                            icon: Icon(
+                                              FontAwesomeIcons.heart,
+                                              color: Colors.red,
+                                              size: 40,
+                                            ))
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                             child: Card(
                               color: Colors.white,
                               elevation: 10,
@@ -78,16 +146,16 @@ class _HomeState extends State<Home> {
                                   Container(
                                     child: Image(
                                       image: NetworkImage(
-                                        photo['url'],
+                                        photo['src']['medium'],
                                       ),
                                     ),
                                     width: 178,
-                                    height: 250,
+                                    height: 240,
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
-                                      'City',
+                                      'Tacken by ${photo['photographer']}',
                                       style: TextStyle(
                                           color: Colors.black,
                                           fontSize: 15,

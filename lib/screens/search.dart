@@ -1,69 +1,97 @@
 import 'package:flutter/material.dart';
-import 'package:wallpaper/widgets/fieldWedgets.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
-
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  _SearchPageState createState() => _SearchPageState();
 }
 
 class _SearchPageState extends State<SearchPage> {
+  String _searchQuery = '';
+  List<dynamic> _searchResults = [];
+
+  Future<void> _performSearch() async {
+    final url = Uri.parse(
+        'https://api.pexels.com/v1/search?query=$_searchQuery&per_page=10');
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization':
+            'b3WwMrMkCQsgW9JBZ5NENB65tJqxAECGtXTqICybIjTUm7FiTo3PkmhC'
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        _searchResults = data['photos'];
+      });
+    } else {
+      print('Error: ${response.reasonPhrase}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-        child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(
-          'Search',
-          style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Search for a Wallpaper',
-              style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold),
-            ),
+        title: TextField(
+          decoration: InputDecoration(
+            hintText: 'Search for photos...',
           ),
-          Container(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: TextFormField(
-                validator: (data) {
-                  if (data!.isEmpty) {
-                    return "faild is requerd";
-                  }
-                },
-                style: TextStyle(color: Colors.black, fontSize: 18),
-                keyboardType: TextInputType.text,
-                decoration: InputDecoration(
-                  enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.black,
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value;
+            });
+          },
+          onSubmitted: (value) {
+            _performSearch();
+          },
+        ),
+      ),
+      body: GridView.builder(
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 200,
+              mainAxisExtent: 300,
+              childAspectRatio: 3 / 2,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20),
+          itemCount: _searchResults.length,
+          itemBuilder: (BuildContext context, index) {
+            final photo = _searchResults[index];
+            return InkWell(
+              onTap: () {},
+              child: Card(
+                color: Colors.white,
+                elevation: 10,
+                shadowColor: Colors.grey,
+                child: Column(
+                  children: [
+                    Container(
+                      child: Image(
+                        image: NetworkImage(
+                          photo['src']['medium'],
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(20)),
-                  contentPadding: EdgeInsets.all(20),
-                  hintText: "wallpaper title",
-                  hintStyle: TextStyle(
-                    color: Colors.black,
-                  ),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20)),
+                      width: 178,
+                      height: 240,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        'Tacken by ${photo['photographer']}',
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  ],
                 ),
               ),
-            ),
-          ),
-        ],
-      ),
-    ));
+            );
+          }),
+    );
   }
 }
+//  
